@@ -64,17 +64,18 @@ export default function SettingsPage() {
           console.log("Full user data object:", JSON.stringify(userData, null, 2));
           setUser(userData);
           // Extract email - check multiple possible field names and nested structures
-          const email = userData.email || 
-                         userData.emailAddress || 
-                         userData.userEmail || 
-                         userData.user?.email ||
-                         userData.profile?.email ||
+          const userDataTyped = userData as any;
+          const email = userDataTyped.email || 
+                         userDataTyped.emailAddress || 
+                         userDataTyped.userEmail || 
+                         userDataTyped.user?.email ||
+                         userDataTyped.profile?.email ||
                          "";
-          const name = userData.name || 
-                      userData.fullName || 
-                      userData.displayName || 
-                      userData.user?.name ||
-                      userData.profile?.name ||
+          const name = userDataTyped.name || 
+                      userDataTyped.fullName || 
+                      userDataTyped.displayName || 
+                      userDataTyped.user?.name ||
+                      userDataTyped.profile?.name ||
                       "";
           setProfileForm({
             name,
