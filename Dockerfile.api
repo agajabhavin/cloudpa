@@ -9,8 +9,8 @@ WORKDIR /app
 # Install pnpm
 RUN corepack enable && corepack prepare pnpm@latest --activate
 
-# Copy root package files
-COPY package.json pnpm-workspace.yaml tsconfig.base.json ./
+# Copy root package files (including lockfile)
+COPY package.json pnpm-workspace.yaml pnpm-lock.yaml tsconfig.base.json ./
 
 # Copy package files
 COPY apps/api/package.json ./apps/api/
