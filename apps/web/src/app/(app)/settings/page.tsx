@@ -152,8 +152,9 @@ export default function SettingsPage() {
       await new Promise(resolve => setTimeout(resolve, remainingTime));
       
       // Update state with response from server
-      const updatedName = updatedUser?.name || profileForm.name;
-      const updatedEmail = updatedUser?.email || profileForm.email;
+      const updatedUserTyped = updatedUser as any;
+      const updatedName = updatedUserTyped?.name || profileForm.name;
+      const updatedEmail = updatedUserTyped?.email || profileForm.email;
       
       setProfileForm({ 
         name: updatedName, 
