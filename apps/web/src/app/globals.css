@@ -1,0 +1,145 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * {
+    -webkit-tap-highlight-color: transparent;
+  }
+  
+  body {
+    @apply bg-gray-50 text-gray-900;
+    /* Prevent text selection on mobile for app-like feel */
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    user-select: none;
+    /* Remove scrolling */
+    overflow: hidden;
+    overflow-x: hidden;
+    height: 100vh;
+    width: 100%;
+    max-width: 100vw;
+  }
+  
+  /* Allow text selection in inputs and content areas */
+  input, textarea, [contenteditable] {
+    -webkit-user-select: text;
+    user-select: text;
+  }
+  
+  /* Mobile viewport fix */
+  html {
+    height: 100%;
+    height: -webkit-fill-available;
+    overflow: hidden;
+    overflow-x: hidden;
+    width: 100%;
+    max-width: 100vw;
+  }
+  
+  body {
+    min-height: 100vh;
+    min-height: -webkit-fill-available;
+    overflow: hidden;
+    overflow-x: hidden;
+    width: 100%;
+    max-width: 100vw;
+  }
+}
+
+@layer components {
+  /* Mobile-first buttons - larger touch targets */
+  /* Enterprise-grade: Subtle opacity-based hover effects, no color changes */
+  .btn {
+    @apply rounded-xl bg-blue-600 text-white px-4 py-3 text-base font-medium 
+           hover:opacity-90 active:opacity-95 transition-opacity
+           touch-manipulation min-h-[44px] flex items-center justify-center;
+    /* 44px minimum for touch targets */
+  }
+  
+  .btn-secondary {
+    @apply rounded-xl border border-gray-300 px-4 py-3 text-base font-medium 
+           hover:bg-gray-50 active:bg-gray-100 transition-colors
+           touch-manipulation min-h-[44px] flex items-center justify-center;
+  }
+  
+  .btn-sm {
+    @apply px-3 py-2 text-sm min-h-[36px];
+  }
+  
+  /* Mobile-optimized inputs */
+  .input {
+    @apply w-full rounded-xl border border-gray-300 px-4 py-3 text-base
+           outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent
+           touch-manipulation;
+    /* Larger text and padding for mobile */
+    font-size: 16px; /* Prevents zoom on iOS */
+  }
+  
+         .card {
+           @apply rounded-xl border border-gray-200 bg-white shadow-sm;
+         }
+  
+  /* Typography scale - mobile first */
+  .page-title {
+    @apply text-xl sm:text-2xl md:text-3xl font-semibold tracking-tight;
+  }
+  
+  .section-title {
+    @apply text-sm sm:text-base font-semibold;
+  }
+  
+  .kpi-value {
+    @apply text-2xl sm:text-3xl md:text-4xl font-semibold;
+  }
+  
+  /* Mobile-safe area padding */
+  .safe-top {
+    padding-top: env(safe-area-inset-top);
+  }
+  
+  .safe-bottom {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  
+  /* Touch-friendly spacing */
+  .touch-target {
+    @apply min-h-[44px] min-w-[44px];
+  }
+}
+
+@layer utilities {
+  /* Modern animations for 2025 UI */
+  @keyframes fade-in {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+  
+  @keyframes slide-in-from-left {
+    from {
+      transform: translateX(-8px);
+      opacity: 0;
+    }
+    to {
+      transform: translateX(0);
+      opacity: 1;
+    }
+  }
+  
+  .animate-in {
+    animation: fade-in 0.2s ease-out;
+  }
+  
+  .fade-in {
+    animation: fade-in 0.2s ease-out;
+  }
+  
+  .slide-in-from-left-2 {
+    animation: slide-in-from-left 0.2s ease-out;
+  }
+}
+

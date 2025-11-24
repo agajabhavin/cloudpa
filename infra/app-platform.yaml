@@ -1,0 +1,76 @@
+name: cloudpa
+
+services:
+  - name: api
+    github:
+      repo: YOUR_GH_ORG/cloudpa
+      branch: main
+    source_dir: apps/api
+    build_command: pnpm install --frozen-lockfile && pnpm prisma generate && pnpm build
+    run_command: node dist/main.js
+    envs:
+      - key: DATABASE_URL
+        value: ${db.DATABASE_URL}
+      - key: JWT_SECRET
+        value: "CHANGE_ME"
+      - key: REDIS_URL
+        value: ${redis.DATABASE_URL}
+      - key: INGEST_CONCURRENCY
+        value: "15"
+      - key: FRONTEND_URL
+        value: ${web.PUBLIC_URL}
+    instance_count: 2  # 2 stateless API instances
+    instance_size_slug: basic-xxs  # 0.5-1 vCPU, 512MB-1GB RAM
+
+  - name: web
+    github:
+      repo: YOUR_GH_ORG/cloudpa
+      branch: main
+    source_dir: apps/web
+    build_command: pnpm install --frozen-lockfile && pnpm build
+    run_command: pnpm start
+    envs:
+      - key: NEXT_PUBLIC_API_URL
+        value: ${api.PUBLIC_URL}
+
+  - name: ingest-worker
+    github:
+      repo: YOUR_GH_ORG/cloudpa
+      branch: main
+    source_dir: apps/api
+    build_command: pnpm install --frozen-lockfile && pnpm prisma generate && pnpm build
+    run_command: node dist/jobs/start-workers.js
+    envs:
+      - key: DATABASE_URL
+        value: ${db.DATABASE_URL}
+      - key: REDIS_URL
+        value: ${redis.DATABASE_URL}
+      - key: INGEST_CONCURRENCY
+        value: "15"
+    instance_count: 3  # 3 worker replicas (can scale to 5-10)
+    instance_size_slug: basic-xxs  # 0.5-1 vCPU, 512MB-1GB RAM
+
+databases:
+  - name: db
+    engine: PG
+    production: true
+    version: "15"
+    # Recommended: 2vCPU / 4GB baseline
+    # Can scale up or add read replicas as needed
+
+  - name: redis
+    engine: REDIS
+    production: true
+    # Managed Redis small/medium tier
+
+jobs:
+  - name: followup-sweeper
+    kind: SCHEDULED
+    schedule:
+      cron: "*/15 * * * *"
+      time_zone: UTC
+    source_dir: apps/api
+    run_command: node dist/jobs/followup-sweeper.js
+    envs:
+      - key: DATABASE_URL
+        value: ${db.DATABASE_URL}

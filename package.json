@@ -1,0 +1,28 @@
+{
+  "name": "cloudpa",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "pnpm --filter api dev & pnpm --filter web dev",
+    "dev:network": "pnpm --filter api dev & pnpm --filter web dev:network",
+    "stop": "powershell -Command \"$api=Get-NetTCPConnection -LocalPort 3001 -ErrorAction SilentlyContinue|Select-Object -ExpandProperty OwningProcess -Unique;if($api){Stop-Process -Id $api -Force};$web=Get-NetTCPConnection -LocalPort 3000 -ErrorAction SilentlyContinue|Select-Object -ExpandProperty OwningProcess -Unique;if($web){Stop-Process -Id $web -Force}\"",
+    "restart": "powershell -ExecutionPolicy Bypass -File .\\restart-servers.ps1",
+    "restart:network": "pnpm stop && Start-Sleep -Seconds 2 && pnpm dev:network",
+    "dev:api": "pnpm --filter api dev",
+    "dev:web": "pnpm --filter web dev",
+    "dev:web:network": "pnpm --filter web dev:network",
+    "build": "pnpm -r build",
+    "build:api": "pnpm --filter api build",
+    "build:web": "pnpm --filter web build",
+    "prisma:generate": "pnpm --filter api prisma generate",
+    "prisma:migrate": "pnpm --filter api prisma migrate dev"
+  },
+  "devDependencies": {
+    "typescript": "^5.3.3"
+  },
+  "engines": {
+    "node": ">=20.0.0",
+    "pnpm": ">=8.0.0"
+  }
+}
+

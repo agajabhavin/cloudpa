@@ -1,0 +1,111 @@
+name: cloudpa-api
+region: nyc
+
+# API Service
+services:
+  - name: api
+    github:
+      repo: your-username/cloudpa
+      branch: main
+      deploy_on_push: true
+    run_command: pnpm start
+    environment_slug: node-js
+    instance_count: 1
+    instance_size_slug: basic-xxs
+    http_port: 3001
+    routes:
+      - path: /
+    envs:
+      # Database (PostgreSQL)
+      - key: DATABASE_URL
+        scope: RUN_TIME
+        value: ${db.DATABASE_URL}
+      
+      # Redis (Managed Redis Database)
+      - key: REDIS_URL
+        scope: RUN_TIME
+        value: ${redis.REDIS_URL}
+      
+      # Twilio WhatsApp
+      - key: TWILIO_ACCOUNT_SID
+        scope: RUN_TIME
+        type: SECRET
+        value: ${TWILIO_ACCOUNT_SID}
+      
+      - key: TWILIO_AUTH_TOKEN
+        scope: RUN_TIME
+        type: SECRET
+        value: ${TWILIO_AUTH_TOKEN}
+      
+      - key: TWILIO_WHATSAPP_FROM
+        scope: RUN_TIME
+        value: whatsapp:+14155238886
+      
+      - key: PUBLIC_BASE_URL
+        scope: RUN_TIME
+        value: https://app.cloudpa.io
+      
+      - key: FRONTEND_URL
+        scope: RUN_TIME
+        value: https://app.cloudpa.io
+      
+      - key: QUEUE_TYPE
+        scope: RUN_TIME
+        value: auto
+      
+      - key: INGEST_CONCURRENCY
+        scope: RUN_TIME
+        value: "15"
+      
+      # JWT
+      - key: JWT_SECRET
+        scope: RUN_TIME
+        type: SECRET
+        value: ${JWT_SECRET}
+
+# Inbound Message Worker
+workers:
+  - name: inbound-worker
+    github:
+      repo: your-username/cloudpa
+      branch: main
+      deploy_on_push: true
+    run_command: pnpm worker:inbound:prod
+    instance_count: 1
+    instance_size_slug: basic-xxs
+    envs:
+      # Database
+      - key: DATABASE_URL
+        scope: RUN_TIME
+        value: ${db.DATABASE_URL}
+      
+      # Redis
+      - key: REDIS_URL
+        scope: RUN_TIME
+        value: ${redis.REDIS_URL}
+      
+      # Worker config
+      - key: QUEUE_TYPE
+        scope: RUN_TIME
+        value: auto
+      
+      - key: INGEST_CONCURRENCY
+        scope: RUN_TIME
+        value: "15"
+
+# Databases
+databases:
+  - name: db
+    engine: PG
+    version: "16"  # PostgreSQL 16 (matches your production database)
+    production: false
+    cluster_name: cloudpa-db
+  
+  # Redis is OPTIONAL - only needed for BullMQ fallback
+  # Uncomment if you want Redis (not required for pg-boss)
+  # - name: redis
+  #   engine: REDIS
+  #   version: "7"
+  #   production: false
+  #   cluster_name: cloudpa-redis
+

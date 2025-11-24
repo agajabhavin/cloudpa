@@ -1,0 +1,213 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model Org {
+  id        String   @id @default(uuid())
+  name      String
+  businessType String? // e.g., "cleaner", "plumber", "tutor"
+  playbookConfig Json? // Playbook automation settings
+  createdAt DateTime @default(now())
+  users     OrgUser[]
+  contacts  Contact[]
+  conversations Conversation[]
+  leads     Lead[]
+  chatAccounts ChatAccount[]
+}
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  password  String
+  name      String?
+  createdAt DateTime @default(now())
+  orgs      OrgUser[]
+}
+
+model OrgUser {
+  orgId  String
+  userId String
+  role   String @default("OWNER")
+  org    Org    @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([orgId, userId])
+}
+
+model Contact {
+  id        String   @id @default(uuid())
+  orgId     String
+  name      String?
+  handle    String
+  createdAt DateTime @default(now())
+  org       Org      @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  conversations Conversation[]
+  leads     Lead[]
+
+  @@unique([orgId, handle], name: "orgId_handle")
+}
+
+model Conversation {
+  id        String   @id @default(uuid())
+  orgId     String
+  contactId String?
+  lastMessageAt DateTime?
+  createdAt DateTime @default(now())
+  org       Org      @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  contact   Contact? @relation(fields: [contactId], references: [id], onDelete: SetNull)
+  messages  Message[]
+  leads     Lead[]
+
+  @@index([orgId, lastMessageAt])
+}
+
+model Message {
+  id             String   @id @default(uuid())
+  orgId          String   // Denormalized for fast queries
+  conversationId String
+  direction      String
+  text           String
+  sentAt         DateTime
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  @@index([orgId, sentAt])
+  @@index([conversationId, sentAt])
+}
+
+model Lead {
+  id            String   @id @default(uuid())
+  orgId         String
+  contactId     String?
+  conversationId String?
+  title         String
+  stage         String   @default("NEW")
+  tags          String[] @default([])
+  autoCaptured  Boolean  @default(false)
+  priceResistance Boolean @default(false)
+  lastMessageAt DateTime?
+  lastRepliedAt DateTime?
+  createdAt     DateTime @default(now())
+  org           Org      @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  contact       Contact? @relation(fields: [contactId], references: [id], onDelete: SetNull)
+  conversation  Conversation? @relation(fields: [conversationId], references: [id], onDelete: SetNull)
+  notes         LeadNote[]
+  followups     Followup[]
+  quotes        Quote[]
+  workOrders    WorkOrder[]
+  followupDrafts FollowupDraft[]
+  
+  @@index([orgId, stage])
+  @@index([orgId, createdAt])
+}
+
+model LeadNote {
+  id        String   @id @default(uuid())
+  leadId    String
+  text      String
+  createdAt DateTime @default(now())
+  lead      Lead     @relation(fields: [leadId], references: [id], onDelete: Cascade)
+
+  @@index([leadId])
+}
+
+model Followup {
+  id        String   @id @default(uuid())
+  leadId    String
+  dueAt     DateTime
+  doneAt    DateTime?
+  createdAt DateTime @default(now())
+  lead      Lead     @relation(fields: [leadId], references: [id], onDelete: Cascade)
+
+  @@index([leadId])
+  @@index([dueAt])
+}
+
+model Quote {
+  id        String   @id @default(uuid())
+  leadId    String
+  status    String   @default("DRAFT")
+  total     Float    @default(0)
+  publicId  String   @unique @default(uuid())
+  viewCount Int      @default(0)
+  lastViewedAt DateTime?
+  insertedInChat Boolean @default(false)
+  createdAt DateTime @default(now())
+  lead      Lead     @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  items     QuoteItem[]
+  
+  @@index([leadId])
+  @@index([status])
+}
+
+model QuoteItem {
+  id      String @id @default(uuid())
+  quoteId String
+  name    String
+  qty     Float
+  price   Float
+  quote   Quote  @relation(fields: [quoteId], references: [id], onDelete: Cascade)
+
+  @@index([quoteId])
+}
+
+model AuditLog {
+  id        String @id @default(uuid())
+  orgId     String
+  actorId   String?
+  action    String
+  meta      Json?
+  createdAt DateTime @default(now())
+
+  @@index([orgId])
+}
+
+model WorkOrder {
+  id        String   @id @default(uuid())
+  leadId    String
+  orgId     String
+  customer  String
+  service   String
+  price     Float
+  dueDate   DateTime?
+  status    String   @default("PENDING")
+  createdAt DateTime @default(now())
+  lead      Lead     @relation(fields: [leadId], references: [id], onDelete: Cascade)
+
+  @@index([leadId])
+  @@index([orgId])
+}
+
+model FollowupDraft {
+  id        String   @id @default(uuid())
+  leadId    String
+  text      String
+  scheduledAt DateTime?
+  sentAt    DateTime?
+  createdAt DateTime @default(now())
+  lead      Lead     @relation(fields: [leadId], references: [id], onDelete: Cascade)
+
+  @@index([leadId])
+}
+
+model ChatAccount {
+  id            String   @id @default(uuid())
+  orgId         String
+  provider      String   // e.g., "twilio_whatsapp"
+  externalPhoneId String // The phone number from Twilio (e.g., whatsapp:+14155238886)
+  accountSid   String?  // Provider-specific account ID
+  authToken     String?  // Encrypted token (optional, can use env vars)
+  isActive      Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  org           Org      @relation(fields: [orgId], references: [id], onDelete: Cascade)
+
+  @@unique([orgId, provider, externalPhoneId], name: "org_provider_phone")
+  @@index([orgId, provider])
+  @@index([provider, externalPhoneId])
+}
+
