@@ -161,7 +161,7 @@ export default function SettingsPage() {
         email: updatedEmail 
       });
       
-      setUser((prev) => ({
+      setUser((prev: any) => ({
         ...(prev || {}),
         name: updatedName,
         email: updatedEmail,
