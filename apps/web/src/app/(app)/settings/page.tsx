@@ -96,10 +96,12 @@ export default function SettingsPage() {
 
         if (orgData) {
           setOrg(orgData);
-          setOrgForm({ name: orgData.name || "" });
+          const orgDataTyped = orgData as any;
+          setOrgForm({ name: orgDataTyped.name || "" });
           // Determine if this is an individual user (org name matches user name or is generic)
-          const orgName = orgData.name?.toLowerCase() || "";
-          const userName = userData?.name?.toLowerCase() || "";
+          const orgName = orgDataTyped.name?.toLowerCase() || "";
+          const userDataTyped = userData as any;
+          const userName = userDataTyped?.name?.toLowerCase() || "";
           const isIndividualUser = 
             orgName === userName || 
             orgName === "my workspace" || 
